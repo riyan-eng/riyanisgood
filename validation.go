@@ -1,7 +1,8 @@
 package riyanisgood
 
 import (
-    "reflect"
+	"errors"
+	"reflect"
 	"strings"
 
 	"encoding/json"
@@ -10,19 +11,18 @@ import (
 	"github.com/thedevsaddam/govalidator"
 )
 
-type validatorInterface interface{
-    ValidateStruct(dataStruct any) (validErrorSlice url.Values)
+type validatorInterface interface {
+	ValidateStruct(dataStruct any) (err error, validErrorSlice url.Values)
 }
 
-type validatorStruct struct{
-
+type validatorStruct struct {
 }
 
 func NewValidation() validatorInterface {
-    return &validStruct{}
+	return &validStruct{}
 }
 
-func (v *validStruct) ValidateStruct(dataStruct any) (validErrorSlice url.Values) {
+func (v *validStruct) ValidateStruct(dataStruct any) (err error, validErrorSlice url.Values) {
 	rv := reflect.ValueOf(dataStruct)
 	rt := rv.Type()
 	var validRulesSlice []validStruct
@@ -47,6 +47,9 @@ func (v *validStruct) ValidateStruct(dataStruct any) (validErrorSlice url.Values
 	data, _ := json.Marshal(dataStruct)
 	json.Unmarshal(data, &validDataMap)
 	validErrorSlice = generateErrorSlice(validRulesMap, validMessagesMap, validDataMap)
+	if len(validErrorSlice) > 0 {
+		return errors.New("Error on validation"), validErrorSlice
+	}
 	return
 }
 
